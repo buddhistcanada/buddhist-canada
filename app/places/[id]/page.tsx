@@ -23,7 +23,14 @@ type Place = {
   tradition?: string
   verified: boolean
   status: 'pending' | 'verified' | 'needs_review' | 'archived'
-  lastUpdatedAt: string
+  lastUpdatedAt?: string | Date
+}
+
+function formatLastUpdated(value: string | Date | undefined) {
+  if (!value) return 'Not available'
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleDateString('en-CA')
 }
 
 export default function PlaceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -83,7 +90,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
         {place.tradition && <p>🪷 Tradition: {place.tradition}</p>}
         <hr style={{ margin: '24px 0' }} />
         <p><strong>{isVerified ? '✓ Verified Buddhist place' : '⏳ Pending verification'}</strong></p>
-        <p>Last updated: {place.lastUpdatedAt}</p>
+        <p>Last updated: {formatLastUpdated(place.lastUpdatedAt)}</p>
         {place.googleMapsUrl && <p><a href={place.googleMapsUrl} target="_blank" rel="noreferrer">📍 Open in Google Maps</a></p>}
         {place.latitude != null && place.longitude != null && (
           <div style={{ marginTop: 24, padding: 18, background: '#f7f7f7', borderRadius: 10 }}>

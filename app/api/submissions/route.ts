@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createDatabaseClient } from '../../../database/client'
+import { ensureDatabaseReady } from '../../../database/bootstrap'
 
 const MAX = { name: 160, address: 300, city: 120, province: 80, postal: 20, phone: 40, email: 254, website: 500, description: 2000 }
 const text = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max)
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     const client = createDatabaseClient()
     await client.connect()
     try {
+      await ensureDatabaseReady(client)
       const duplicate = await client.query(
         `SELECT id FROM place_submissions WHERE LOWER(name)=LOWER($1) AND LOWER(city)=LOWER($2) AND LOWER(province_territory)=LOWER($3) AND status='pending' LIMIT 1`,
         [name, city, province],

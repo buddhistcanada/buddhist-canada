@@ -6,11 +6,17 @@ import { useEffect, useState } from 'react'
 type Place = {
   id: string; name: string; address?: string; city: string; province: string; postalCode?: string
   tradition?: string; phone?: string; email?: string; website?: string; googleMapsUrl?: string
-  verified: boolean; status: 'pending' | 'verified' | 'needs_review' | 'archived'; sourceName?: string; lastUpdatedAt?: string
+  verified: boolean; status: 'pending' | 'verified' | 'needs_review' | 'archived'; sourceName?: string; sourceUrl?: string; lastUpdatedAt?: string
 }
 
 const statusLabel: Record<Place['status'], string> = {
   pending: 'Pending verification', verified: 'Verified', needs_review: 'Needs review', archived: 'Archived'
+}
+
+function formatDate(value?: string) {
+  if (!value) return ''
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-CA')
 }
 
 export default function PlacesPage() {
@@ -26,7 +32,7 @@ export default function PlacesPage() {
       const params = new URLSearchParams()
       if (q.trim()) params.set('q', q.trim())
       if (province) params.set('province', province)
-      const response = await fetch(`/api/places?${params.toString()}`)
+      const response = await fetch(`/api/places?${params.toString()}`, { cache: 'no-store' })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Search failed')
       setPlaces(data.places || [])
@@ -43,10 +49,10 @@ export default function PlacesPage() {
       <h1>🇨🇦 Buddhist Places in Canada</h1>
       <p>Browse Buddhist temples, centres, monasteries and societies currently listed in our directory.</p>
       <div style={{ margin: '18px 0', padding: 14, borderRadius: 10, background: '#fff8e6', border: '1px solid #ead9a5' }}>
-        <strong>Verification notice:</strong> Information in this directory is collected from listed sources and may not yet have been independently verified. Each place shows its current verification status.
+        <strong>Verification notice:</strong> Information is collected from public sources and is not necessarily current. A record remains clearly marked as pending until a directory administrator verifies it against a current source.
       </div>
       <form onSubmit={e => { e.preventDefault(); void search() }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '24px 0' }}>
-        <input aria-label="Search places" value={q} onChange={e => setQ(e.target.value)} placeholder="Name, city or address" style={{ padding: 10, minWidth: 260 }} />
+        <input aria-label="Search places" value={q} onChange={e => setQ(e.target.value)} placeholder="Name, city, address, email or phone" style={{ padding: 10, minWidth: 260 }} />
         <select aria-label="Province" value={province} onChange={e => setProvince(e.target.value)} style={{ padding: 10 }}>
           <option value="">All provinces & territories</option><option>Alberta</option><option>British Columbia</option><option>Manitoba</option><option>New Brunswick</option><option>Newfoundland and Labrador</option><option>Nova Scotia</option><option>Ontario</option><option>Prince Edward Island</option><option>Quebec</option><option>Saskatchewan</option><option>Yukon</option><option>Northwest Territories</option><option>Nunavut</option>
         </select>
@@ -72,7 +78,7 @@ export default function PlacesPage() {
               {place.email && <p>Email: {place.email}</p>}
               {place.website && <p><a href={place.website} target="_blank" rel="noreferrer">Website</a></p>}
               {place.googleMapsUrl && <p><a href={place.googleMapsUrl} target="_blank" rel="noreferrer">Open in Google Maps</a></p>}
-              {place.sourceName && <p style={{ fontSize: 13, color: '#666' }}>Source: {place.sourceName}{place.lastUpdatedAt ? ` · Updated ${new Date(place.lastUpdatedAt).toLocaleDateString('en-CA')}` : ''}</p>}
+              {place.sourceName && <p style={{ fontSize: 13, color: '#666' }}>Source: {place.sourceUrl ? <a href={place.sourceUrl} target="_blank" rel="noreferrer">{place.sourceName}</a> : place.sourceName}{place.lastUpdatedAt ? ` · Updated ${formatDate(place.lastUpdatedAt)}` : ''}</p>}
               <p><Link href={`/places/${place.id}`}>View details →</Link></p>
             </article>
           )

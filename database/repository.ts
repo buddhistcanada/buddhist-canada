@@ -1,4 +1,5 @@
 import { createDatabaseClient } from './client'
+import { ensureDatabaseReady } from './bootstrap'
 
 export type BuddhistPlaceRecord = {
   id: string
@@ -30,6 +31,7 @@ export async function listPlaces(filters: { q?: string; province?: string } = {}
   const client = createDatabaseClient()
   await client.connect()
   try {
+    await ensureDatabaseReady(client)
     const values: string[] = []
     const conditions: string[] = []
     if (filters.q) {
@@ -56,6 +58,7 @@ export async function updatePlace(id: string, patch: PlacePatch) {
   const client = createDatabaseClient()
   await client.connect()
   try {
+    await ensureDatabaseReady(client)
     const values: unknown[] = []
     const assignments = entries.map(([key, value], index) => { values.push(value); return `${allowed[key]} = $${index + 1}` })
     values.push(id)

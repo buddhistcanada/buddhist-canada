@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node database/migrate.cjs && next build",
+    "build": "next build",
+    "migrate": "node database/migrate.cjs",
+    "build:with-migrate": "npm run migrate && npm run build",
     "start": "next start",
     "lint": "next lint"
   },

@@ -1,3 +1,5 @@
+import { createDatabaseClient } from './client'
+
 export type BuddhistPlaceRecord = {
   id: string
   name: string
@@ -13,27 +15,54 @@ export type BuddhistPlaceRecord = {
   googleMapsUrl?: string
   tradition?: string
   verified: boolean
+  status: 'pending' | 'verified' | 'needs_review' | 'archived'
   lastVerifiedAt?: string
   lastUpdatedAt: string
   sourceName: string
   sourceUrl: string
 }
 
-/**
- * PostgreSQL repository contract.
- * Runtime configuration should provide DATABASE_URL.
- * Keep all database access behind this interface so the API/UI do not depend on a specific driver.
- */
-export interface BuddhistPlaceRepository {
-  list(filters?: { q?: string; province?: string }): Promise<BuddhistPlaceRecord[]>
-  getById(id: string): Promise<BuddhistPlaceRecord | null>
-  create(place: Omit<BuddhistPlaceRecord, 'id' | 'lastUpdatedAt'>): Promise<BuddhistPlaceRecord>
-  update(id: string, patch: Partial<BuddhistPlaceRecord>): Promise<BuddhistPlaceRecord>
-  archive(id: string): Promise<void>
+type PlacePatch = Partial<Omit<BuddhistPlaceRecord, 'id'>>
+
+const columns = `id, name, address, city, province_territory AS province, postal_code AS "postalCode", phone, email, website, latitude, longitude, google_maps_url AS "googleMapsUrl", tradition, verified, status, last_verified_at AS "lastVerifiedAt", last_updated_at AS "lastUpdatedAt", source_name AS "sourceName", source_url AS "sourceUrl"`
+
+export async function listPlaces(filters: { q?: string; province?: string } = {}) {
+  const client = createDatabaseClient()
+  await client.connect()
+  try {
+    const values: string[] = []
+    const conditions: string[] = []
+    if (filters.q) {
+      values.push(`%${filters.q}%`)
+      const p = values.length
+      conditions.push(`(name ILIKE $${p} OR city ILIKE $${p} OR province_territory ILIKE $${p} OR address ILIKE $${p})`)
+    }
+    if (filters.province) {
+      values.push(filters.province)
+      conditions.push(`province_territory = $${values.length}`)
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+    const result = await client.query(`SELECT ${columns} FROM buddhist_places ${where} ORDER BY name`, values)
+    return result.rows as BuddhistPlaceRecord[]
+  } finally {
+    await client.end()
+  }
 }
 
-export function requireDatabaseUrl() {
-  const url = process.env.DATABASE_URL
-  if (!url) throw new Error('DATABASE_URL is not configured')
-  return url
+export async function updatePlace(id: string, patch: PlacePatch) {
+  const allowed: Record<string, string> = { name: 'name', address: 'address', city: 'city', province: 'province_territory', postalCode: 'postal_code', phone: 'phone', email: 'email', website: 'website', latitude: 'latitude', longitude: 'longitude', googleMapsUrl: 'google_maps_url', tradition: 'tradition', verified: 'verified', status: 'status', lastVerifiedAt: 'last_verified_at', sourceName: 'source_name', sourceUrl: 'source_url' }
+  const entries = Object.entries(patch).filter(([key, value]) => allowed[key] && value !== undefined)
+  if (!entries.length) throw new Error('No valid fields supplied')
+  const client = createDatabaseClient()
+  await client.connect()
+  try {
+    const values: unknown[] = []
+    const assignments = entries.map(([key, value], index) => { values.push(value); return `${allowed[key]} = $${index + 1}` })
+    values.push(id)
+    const result = await client.query(`UPDATE buddhist_places SET ${assignments.join(', ')}, last_updated_at = NOW() WHERE id = $${values.length} RETURNING ${columns}`, values)
+    if (!result.rowCount) return null
+    return result.rows[0] as BuddhistPlaceRecord
+  } finally {
+    await client.end()
+  }
 }

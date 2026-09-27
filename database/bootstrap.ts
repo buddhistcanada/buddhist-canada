@@ -1,4 +1,5 @@
 import type { Client } from 'pg'
+import { CANADA_RESEARCH_SEED } from '../data/canada-research-seed'
 
 const SCHEMA_SQL = `
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -84,6 +85,35 @@ INSERT INTO buddhist_places (
 ON CONFLICT (id) DO NOTHING;
 `
 
+async function applyResearchSeed(client: Client) {
+  for (const place of CANADA_RESEARCH_SEED) {
+    await client.query(
+      `INSERT INTO buddhist_places (
+        name, address, city, province_territory, postal_code, phone, email, website,
+        tradition, status, verified, source_name, source_url, source_checked_at, last_updated_at
+      )
+      SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',FALSE,$10,$11,CURRENT_DATE,NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM buddhist_places
+        WHERE LOWER(name)=LOWER($1) AND LOWER(city)=LOWER($3) AND LOWER(province_territory)=LOWER($4)
+      )`,
+      [
+        place.name,
+        place.address ?? null,
+        place.city,
+        place.province,
+        place.postalCode ?? null,
+        place.phone ?? null,
+        place.email ?? null,
+        place.website ?? null,
+        place.tradition ?? null,
+        place.sourceName,
+        place.sourceUrl,
+      ],
+    )
+  }
+}
+
 let initialization: Promise<void> | null = null
 
 export function ensureDatabaseReady(client: Client) {
@@ -91,6 +121,7 @@ export function ensureDatabaseReady(client: Client) {
     initialization = (async () => {
       await client.query(SCHEMA_SQL)
       await client.query(SEED_SQL)
+      await applyResearchSeed(client)
     })().catch((error) => {
       initialization = null
       throw error

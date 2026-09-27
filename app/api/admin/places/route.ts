@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server'
 import { listPlaces, updatePlace } from '../../../../database/repository'
 
+function isAuthorized(request: Request) {
+  const expected = process.env.ADMIN_API_KEY
+  const supplied = request.headers.get('x-admin-api-key')
+  return Boolean(expected && supplied && supplied === expected)
+}
+
 export async function GET(request: Request) {
+  if (!isAuthorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { searchParams } = new URL(request.url)
     const places = await listPlaces({ q: searchParams.get('q') || undefined, province: searchParams.get('province') || undefined })
@@ -13,6 +20,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!isAuthorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const body = await request.json()
     const id = String(body.id || '')

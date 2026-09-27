@@ -23,14 +23,16 @@ type Place = {
   tradition?: string
   verified: boolean
   status: 'pending' | 'verified' | 'needs_review' | 'archived'
-  lastUpdatedAt?: string | Date
+  lastVerifiedAt?: string
+  lastUpdatedAt?: string
+  sourceName?: string
+  sourceUrl?: string
 }
 
-function formatLastUpdated(value: string | Date | undefined) {
+function formatDate(value?: string) {
   if (!value) return 'Not available'
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return String(value)
-  return date.toLocaleDateString('en-CA')
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-CA')
 }
 
 export default function PlaceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,29 +44,23 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     let cancelled = false
-
     async function loadPlace() {
       try {
-        const response = await fetch('/api/places')
+        const response = await fetch(`/api/places/${encodeURIComponent(id)}`, { cache: 'no-store' })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Unable to load place')
-        const found = (data.places || []).find((item: Place) => item.id === resolvedId)
-        if (!found) throw new Error('Buddhist place not found')
-        if (!cancelled) setPlace(found)
+        if (!cancelled) setPlace(data.place)
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Unable to load place')
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
-
     void loadPlace()
     return () => { cancelled = true }
-  }, [resolvedId])
+  }, [id, resolvedId])
 
-  if (loading) {
-    return <main style={{ maxWidth: 900, margin: '0 auto', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}><p>Loading place…</p></main>
-  }
+  if (loading) return <main style={{ maxWidth: 900, margin: '0 auto', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}><p>Loading place…</p></main>
 
   if (error || !place) {
     return (
@@ -89,8 +85,13 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
         {place.website && <p>🌐 <a href={place.website} target="_blank" rel="noreferrer">Official website</a></p>}
         {place.tradition && <p>🪷 Tradition: {place.tradition}</p>}
         <hr style={{ margin: '24px 0' }} />
-        <p><strong>{isVerified ? '✓ Verified Buddhist place' : '⏳ Pending verification'}</strong></p>
-        <p>Last updated: {formatLastUpdated(place.lastUpdatedAt)}</p>
+        <p><strong>{isVerified ? '✓ Verified Buddhist place' : '⚠ Pending verification'}</strong></p>
+        <p style={{ color: isVerified ? '#246b2b' : '#7a5b00' }}>
+          {isVerified ? 'This record has been checked by a directory administrator.' : 'Information has not yet been independently verified. Please confirm details with the organization before relying on them.'}
+        </p>
+        <p>Last updated: {formatDate(place.lastUpdatedAt)}</p>
+        {place.lastVerifiedAt && <p>Last verified: {formatDate(place.lastVerifiedAt)}</p>}
+        {place.sourceName && <p>Source: {place.sourceUrl ? <a href={place.sourceUrl} target="_blank" rel="noreferrer">{place.sourceName}</a> : place.sourceName}</p>}
         {place.googleMapsUrl && <p><a href={place.googleMapsUrl} target="_blank" rel="noreferrer">📍 Open in Google Maps</a></p>}
         {place.latitude != null && place.longitude != null && (
           <div style={{ marginTop: 24, padding: 18, background: '#f7f7f7', borderRadius: 10 }}>

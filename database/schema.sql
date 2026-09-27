@@ -1,4 +1,4 @@
--- Buddhist Canada directory — initial PostgreSQL schema
+-- Buddhist Canada directory — PostgreSQL schema
 
 CREATE TABLE IF NOT EXISTS buddhist_places (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -19,10 +19,15 @@ CREATE TABLE IF NOT EXISTS buddhist_places (
   languages TEXT[],
   status TEXT NOT NULL DEFAULT 'active',
   verified BOOLEAN NOT NULL DEFAULT FALSE,
+  source_name TEXT,
+  source_url TEXT,
   last_verified_at TIMESTAMPTZ,
   last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE buddhist_places ADD COLUMN IF NOT EXISTS source_name TEXT;
+ALTER TABLE buddhist_places ADD COLUMN IF NOT EXISTS source_url TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_buddhist_places_name ON buddhist_places (name);
 CREATE INDEX IF NOT EXISTS idx_buddhist_places_city ON buddhist_places (city);

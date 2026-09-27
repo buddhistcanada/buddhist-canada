@@ -21,11 +21,12 @@ export type BuddhistPlaceRecord = {
   lastUpdatedAt: string
   sourceName: string
   sourceUrl: string
+  sourceCheckedAt?: string
 }
 
 type PlacePatch = Partial<Omit<BuddhistPlaceRecord, 'id'>>
 
-const columns = `id, name, address, city, province_territory AS province, postal_code AS "postalCode", phone, email, website, latitude, longitude, google_maps_url AS "googleMapsUrl", tradition, verified, status, last_verified_at AS "lastVerifiedAt", last_updated_at AS "lastUpdatedAt", source_name AS "sourceName", source_url AS "sourceUrl"`
+const columns = `id, name, address, city, province_territory AS province, postal_code AS "postalCode", phone, email, website, latitude, longitude, google_maps_url AS "googleMapsUrl", tradition, verified, status, last_verified_at::text AS "lastVerifiedAt", last_updated_at::text AS "lastUpdatedAt", source_name AS "sourceName", source_url AS "sourceUrl", source_checked_at::text AS "sourceCheckedAt"`
 
 async function withClient<T>(work: (client: ReturnType<typeof createDatabaseClient>) => Promise<T>) {
   const client = createDatabaseClient()
@@ -45,7 +46,7 @@ export async function listPlaces(filters: { q?: string; province?: string } = {}
     if (filters.q) {
       values.push(`%${filters.q}%`)
       const p = values.length
-      conditions.push(`(name ILIKE $${p} OR city ILIKE $${p} OR province_territory ILIKE $${p} OR address ILIKE $${p})`)
+      conditions.push(`(name ILIKE $${p} OR city ILIKE $${p} OR province_territory ILIKE $${p} OR address ILIKE $${p} OR email ILIKE $${p} OR phone ILIKE $${p})`)
     }
     if (filters.province) {
       values.push(filters.province)

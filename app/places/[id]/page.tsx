@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 const PLACE_ALIASES: Record<string, string> = {
   'calgary-001': '033f5b61-c1d2-5631-a8a2-438ee5ca213a',
@@ -26,8 +26,9 @@ type Place = {
   lastUpdatedAt: string
 }
 
-export default function PlaceDetailsPage({ params }: { params: { id: string } }) {
-  const resolvedId = PLACE_ALIASES[params.id] || params.id
+export default function PlaceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const resolvedId = PLACE_ALIASES[id] || id
   const [place, setPlace] = useState<Place | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

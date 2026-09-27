@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react'
 
 type Submission = { id: string; name: string; address?: string; city: string; province: string; phone?: string; email?: string; website?: string; description?: string; status: string; createdAt: string }
-type Place = { id: string; name: string; city: string; province: string; status: string; lastUpdatedAt: string; sourceName: string; sourceUrl: string }
+type Place = { id: string; name: string; city: string; province: string; status: string; verified: boolean; lastUpdatedAt: string; lastVerifiedAt?: string; sourceName: string; sourceUrl: string }
+
+function formatDate(value?: string) {
+  if (!value) return 'Not available'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-CA')
+}
 
 export default function AdminPage() {
   const [key, setKey] = useState('')
@@ -15,7 +21,7 @@ export default function AdminPage() {
   async function load(adminKey = key) {
     setError('')
     const headers = { 'x-admin-api-key': adminKey }
-    const [s, p] = await Promise.all([fetch('/api/admin/submissions', { headers }), fetch('/api/admin/places', { headers })])
+    const [s, p] = await Promise.all([fetch('/api/admin/submissions', { headers, cache: 'no-store' }), fetch('/api/admin/places', { headers, cache: 'no-store' })])
     if (!s.ok || !p.ok) { setError('Unauthorized or unable to load admin data.'); return }
     setSubmissions((await s.json()).submissions || [])
     setPlaces((await p.json()).places || [])
@@ -42,8 +48,8 @@ export default function AdminPage() {
 
   return <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}>
     <p>🇨🇦 Buddhist Canada / Admin</p><h1>Verification Dashboard</h1>{error && <p role="alert">{error}</p>}
-    <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, margin: '28px 0' }}><div>Pending: <strong>{submissions.length}</strong></div><div>Places: <strong>{places.length}</strong></div><div>Verified: <strong>{places.filter(p => p.status === 'verified').length}</strong></div></section>
+    <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, margin: '28px 0' }}><div>Pending submissions: <strong>{submissions.length}</strong></div><div>Places: <strong>{places.length}</strong></div><div>Verified: <strong>{places.filter(p => p.status === 'verified' && p.verified).length}</strong></div><div>Needs verification: <strong>{places.filter(p => p.status !== 'verified').length}</strong></div></section>
     <h2>Pending submissions</h2>{submissions.length === 0 && <p>No pending submissions.</p>}{submissions.map(s => <article key={s.id} style={{ border: '1px solid #ddd', borderRadius: 12, padding: 20, marginTop: 12 }}><h3>{s.name}</h3><p>{s.city}, {s.province}</p>{s.address && <p>{s.address}</p>}{s.phone && <p>Phone: {s.phone}</p>}{s.email && <p>Email: {s.email}</p>}{s.website && <p>Website: {s.website}</p>}{s.description && <p>{s.description}</p>}<button onClick={() => review(s.id, 'approved')}>Approve</button>{' '}<button onClick={() => review(s.id, 'rejected')}>Reject</button></article>)}
-    <h2 style={{ marginTop: 40 }}>Places requiring verification</h2>{places.filter(p => p.status !== 'archived').map(p => <article key={p.id} style={{ border: '1px solid #ddd', borderRadius: 12, padding: 20, marginTop: 12 }}><h3>{p.name}</h3><p>{p.city}, {p.province}</p><p>Status: <strong>{p.status}</strong></p>{p.sourceUrl && <p>Source: <a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.sourceName}</a></p>}{p.status !== 'verified' && <button onClick={() => verify(p.id)}>Verify</button>}</article>)}
+    <h2 style={{ marginTop: 40 }}>Places requiring verification</h2>{places.filter(p => p.status !== 'archived').map(p => { const verified = p.status === 'verified' && p.verified; return <article key={p.id} style={{ border: '1px solid #ddd', borderRadius: 12, padding: 20, marginTop: 12 }}><h3>{p.name}</h3><p>{p.city}, {p.province}</p><p>Status: <strong>{verified ? 'Verified' : p.status}</strong></p><p>Source: {p.sourceUrl ? <a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.sourceName}</a> : p.sourceName}</p><p>Last updated: {formatDate(p.lastUpdatedAt)}{p.lastVerifiedAt ? ` · Last verified: ${formatDate(p.lastVerifiedAt)}` : ''}</p>{!verified && <button onClick={() => verify(p.id)}>Verify this record</button>}</article> })}
   </main>
 }

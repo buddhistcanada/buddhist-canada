@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
     }
     const s = submission.rows[0]
     if (decision === 'approved') {
-      await client.query(`INSERT INTO buddhist_places (name, address, city, province_territory, postal_code, phone, email, website, description, status, verified, source_name, source_url) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',FALSE,'Public submission',NULL)`, [s.name, s.address, s.city, s.province_territory, s.postal_code, s.phone, s.email, s.website, s.description])
+      await client.query(`INSERT INTO buddhist_places (name, address, city, province_territory, postal_code, phone, email, website, description, status, verified, source_name, source_url, source_checked_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',FALSE,'Public submission',NULL,CURRENT_DATE)`, [s.name, s.address, s.city, s.province_territory, s.postal_code, s.phone, s.email, s.website, s.description])
     }
     const updated = await client.query(`UPDATE place_submissions SET status=$1, reviewed_at=NOW(), reviewed_by=$2 WHERE id=$3 RETURNING id, status, reviewed_at AS "reviewedAt", reviewed_by AS "reviewedBy"`, [decision, reviewedBy, id])
     await client.query('COMMIT')

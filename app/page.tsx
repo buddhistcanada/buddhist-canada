@@ -5,21 +5,71 @@ const provinces = [
   'Northwest Territories', 'Nunavut', 'Yukon'
 ]
 
+const mapButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  padding: '13px 18px',
+  borderRadius: 12,
+  background: '#111',
+  color: '#fff',
+  textDecoration: 'none',
+  fontWeight: 800,
+  border: '1px solid #111',
+}
+
+const secondaryButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '13px 18px',
+  borderRadius: 12,
+  background: '#fff',
+  color: '#111',
+  textDecoration: 'none',
+  fontWeight: 700,
+  border: '1px solid #bbb',
+}
+
 export default function HomePage() {
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 20px', fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px 48px', fontFamily: 'system-ui, sans-serif' }}>
       <header>
-        <p style={{ fontWeight: 700 }}>🇨🇦 Buddhist Canada</p>
-        <h1 style={{ fontSize: 44, margin: '12px 0' }}>Find Buddhist Places Across Canada</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <p style={{ fontWeight: 800, margin: 0 }}>🇨🇦 Buddhist Canada</p>
+          <nav aria-label="Primary navigation" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <a href="/map" style={mapButtonStyle}>🗺️ Map</a>
+            <a href="/places" style={secondaryButtonStyle}>Browse places</a>
+          </nav>
+        </div>
+
+        <h1 style={{ fontSize: 44, margin: '28px 0 12px' }}>Find Buddhist Places Across Canada</h1>
         <p style={{ fontSize: 18, lineHeight: 1.6, maxWidth: 760 }}>
           Search Buddhist temples, monasteries, meditation centres and Buddhist organizations across every Canadian province and territory.
         </p>
       </header>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 24 }}>
-        <a href="/map" style={{ padding: '12px 18px', borderRadius: 10, background: '#111', color: '#fff', textDecoration: 'none', fontWeight: 700 }}>🗺️ View Canada Buddhist Map</a>
-        <a href="/places" style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid #bbb', textDecoration: 'none', fontWeight: 700 }}>Browse all places</a>
-      </div>
+      <section
+        aria-label="Map and directory"
+        style={{
+          marginTop: 28,
+          padding: 22,
+          borderRadius: 16,
+          border: '1px solid #ddd',
+          background: '#fafafa',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
+          <div>
+            <h2 style={{ margin: '0 0 6px' }}>🗺️ Explore the Buddhist Canada Map</h2>
+            <p style={{ margin: 0, lineHeight: 1.5 }}>
+              See Buddhist places across Canada on an interactive map. Verified records are distinguished from places still awaiting verification.
+            </p>
+          </div>
+          <a href="/map" style={{ ...mapButtonStyle, whiteSpace: 'nowrap' }}>Open map →</a>
+        </div>
+      </section>
 
       <form action="/search" method="get" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 32 }}>
         <input

@@ -11,12 +11,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "leaflet": "latest",
     "next": "latest",
     "pg": "latest",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@types/leaflet": "latest",
     "@types/node": "latest",
     "@types/pg": "latest",
     "@types/react": "latest",

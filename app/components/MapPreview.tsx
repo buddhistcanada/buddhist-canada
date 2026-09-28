@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Map as LeafletMap, CircleMarker } from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 
 type Place = {
   id: string
@@ -49,6 +48,7 @@ export default function MapPreview() {
   const markersRef = useRef<CircleMarker[]>([])
   const [places, setPlaces] = useState<Place[]>([])
   const [error, setError] = useState('')
+  const [mapReady, setMapReady] = useState(false)
 
   useEffect(() => {
     fetch('/api/places', { cache: 'no-store' })
@@ -72,9 +72,10 @@ export default function MapPreview() {
         maxZoom: 18,
       }).addTo(map)
       mapRef.current = map
+      setMapReady(true)
       window.setTimeout(() => map.invalidateSize(), 100)
     }
-    init().catch(() => setError('Unable to initialize map'))
+    init().catch(err => setError(err instanceof Error ? err.message : 'Unable to initialize map'))
     return () => {
       cancelled = true
       markersRef.current.forEach(marker => marker.remove())
@@ -84,7 +85,7 @@ export default function MapPreview() {
   }, [])
 
   useEffect(() => {
-    if (!mapRef.current || places.length === 0) return
+    if (!mapRef.current || !mapReady) return
     let alive = true
     async function render() {
       const L = await import('leaflet')
@@ -108,7 +109,7 @@ export default function MapPreview() {
     }
     render().catch(() => setError('Unable to render map markers'))
     return () => { alive = false }
-  }, [places])
+  }, [places, mapReady])
 
   return (
     <section aria-label="Live Buddhist places map" style={{ marginTop: 32 }}>
@@ -116,18 +117,23 @@ export default function MapPreview() {
         <div>
           <span style={{ display: 'inline-block', padding: '5px 10px', borderRadius: 999, background: '#dcfce7', color: '#16805b', fontWeight: 800 }}>Map view</span>
           <h2 style={{ margin: '10px 0 2px' }}>Explore Buddhist places</h2>
-          <p style={{ margin: 0, color: '#555' }}>Live directory locations across Canada</p>
+          <p style={{ margin: 0, color: '#555' }}>Interactive Canada map • {places.length} directory records loaded</p>
         </div>
         <a href="/map" style={{ fontWeight: 800, color: '#16805b' }}>Full map →</a>
       </div>
       <div style={{ position: 'relative', height: 430, borderRadius: 18, overflow: 'hidden', border: '1px solid #d8e2da', background: '#e8f1eb' }}>
         <div ref={nodeRef} style={{ height: '100%', width: '100%' }} />
-        <div style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 500, padding: '7px 10px', borderRadius: 10, background: 'rgba(255,255,255,.92)', fontSize: 12, boxShadow: '0 1px 5px rgba(0,0,0,.15)' }}>
+        {!mapReady && (
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', zIndex: 400, background: '#e8f1eb', color: '#315443', fontWeight: 800 }}>
+            Loading interactive map…
+          </div>
+        )}
+        <div style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 500, padding: '7px 10px', borderRadius: 10, background: 'rgba(255,255,255,.94)', fontSize: 12, boxShadow: '0 1px 5px rgba(0,0,0,.15)' }}>
           🟢 Verified &nbsp; 🟠 Pending / unverified
         </div>
       </div>
       {error && <p style={{ color: '#b91c1c', fontSize: 13 }}>{error}</p>}
-      <p style={{ marginTop: 8, color: '#666', fontSize: 12 }}>Markers without verified coordinates are shown at city/province level and clearly marked approximate.</p>
+      <p style={{ marginTop: 8, color: '#666', fontSize: 12 }}>Exact coordinates are shown only when present; otherwise markers are clearly identified as approximate city/province locations.</p>
     </section>
   )
 }

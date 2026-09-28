@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { CircleMarker, Map as LeafletMap } from 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 type Place = {
@@ -18,8 +18,10 @@ type Place = {
   sourceName?: string
 }
 
+type MarkerHandle = { remove: () => void }
+
 const cityCoordinates: Record<string, [number, number]> = {
-  Calgary: [51.0447, -114.0719], Edmonton: [53.5461, -113.4938], Lethbridge: [49.6956, -112.8451], Red Deer: [52.2681, -113.8112],
+  Calgary: [51.0447, -114.0719], Edmonton: [53.5461, -113.4938], Lethbridge: [49.6956, -112.8451], 'Red Deer': [52.2681, -113.8112],
   Vancouver: [49.2827, -123.1207], Burnaby: [49.2488, -122.9805], Richmond: [49.1666, -123.1336], Surrey: [49.1913, -122.8490], Victoria: [48.4284, -123.3656], Kelowna: [49.8880, -119.4960],
   Toronto: [43.6532, -79.3832], Mississauga: [43.5890, -79.6441], Markham: [43.8561, -79.3370], Ottawa: [45.4215, -75.6972], Montreal: [45.5019, -73.5674], Laval: [45.6066, -73.7124],
   Winnipeg: [49.8951, -97.1384], Regina: [50.4452, -104.6189], Saskatoon: [52.1332, -106.6700], Halifax: [44.6488, -63.5752], Fredericton: [45.9636, -66.6431], SaintJohn: [45.2733, -66.0633],
@@ -46,7 +48,7 @@ function coords(place: Place) {
 export default function CanadaMapPage() {
   const mapNode = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
-  const markersRef = useRef<CircleMarker[]>([])
+  const markersRef = useRef<MarkerHandle[]>([])
   const [places, setPlaces] = useState<Place[]>([])
   const [error, setError] = useState('')
   const [selected, setSelected] = useState<string | null>(null)

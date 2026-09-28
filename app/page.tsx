@@ -16,6 +16,11 @@ export default function HomePage() {
         </p>
       </header>
 
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 24 }}>
+        <a href="/map" style={{ padding: '12px 18px', borderRadius: 10, background: '#111', color: '#fff', textDecoration: 'none', fontWeight: 700 }}>🗺️ View Canada Buddhist Map</a>
+        <a href="/places" style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid #bbb', textDecoration: 'none', fontWeight: 700 }}>Browse all places</a>
+      </div>
+
       <form action="/search" method="get" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 32 }}>
         <input
           name="q"

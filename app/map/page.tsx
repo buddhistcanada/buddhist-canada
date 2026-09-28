@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
+import type { CircleMarker, Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 type Place = {
@@ -46,7 +46,7 @@ function coords(place: Place) {
 export default function CanadaMapPage() {
   const mapNode = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
-  const markersRef = useRef<LeafletMarker[]>([])
+  const markersRef = useRef<CircleMarker[]>([])
   const [places, setPlaces] = useState<Place[]>([])
   const [error, setError] = useState('')
   const [selected, setSelected] = useState<string | null>(null)

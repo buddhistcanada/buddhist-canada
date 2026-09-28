@@ -2,7 +2,7 @@ import MapPreview from './components/MapPreview'
 
 const provinces = ['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Nova Scotia','Ontario','Prince Edward Island','Quebec','Saskatchewan','Northwest Territories','Nunavut','Yukon']
 
-const mapButtonStyle = { display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px 18px', borderRadius:12, background:'#111', color:'#fff', textDecoration:'none', fontWeight:800, border:'1px solid #111' }
+const mapButtonStyle = { display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'16px 22px', borderRadius:10, background:'#111', color:'#fff', textDecoration:'none', fontWeight:800, border:'1px solid #111', whiteSpace:'nowrap' }
 const secondaryButtonStyle = { display:'inline-flex', alignItems:'center', justifyContent:'center', padding:'13px 18px', borderRadius:12, background:'#fff', color:'#111', textDecoration:'none', fontWeight:700, border:'1px solid #bbb' }
 
 export default function HomePage() {
@@ -20,6 +20,12 @@ export default function HomePage() {
         <p style={{ fontSize:18, lineHeight:1.6, maxWidth:760 }}>Search Buddhist temples, monasteries, meditation centres and Buddhist organizations across every Canadian province and territory.</p>
       </header>
 
+      <form action="/search" method="get" style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:32 }}>
+        <input name="q" placeholder="Name, city, address, email or phone" aria-label="Search Buddhist places" style={{ flex:'1 1 480px', minWidth:0, padding:16, fontSize:16, border:'1px solid #bbb', borderRadius:10 }} />
+        <button type="submit" style={{ padding:'16px 24px', fontSize:16, border:0, borderRadius:10, cursor:'pointer', background:'#111', color:'#fff', fontWeight:800 }}>Search</button>
+        <a href="/map" aria-label="Open map" style={mapButtonStyle}>🗺️ Map</a>
+      </form>
+
       <MapPreview />
 
       <section aria-label="Map and directory" style={{ marginTop:28, padding:22, borderRadius:16, border:'1px solid #ddd', background:'#fafafa' }}>
@@ -28,11 +34,6 @@ export default function HomePage() {
           <a href="/map" style={{ ...mapButtonStyle, whiteSpace:'nowrap' }}>Open full map →</a>
         </div>
       </section>
-
-      <form action="/search" method="get" style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:32 }}>
-        <input name="q" placeholder="Name, city, address, email or phone" aria-label="Search Buddhist places" style={{ flex:'1 1 480px', padding:16, fontSize:16, border:'1px solid #bbb', borderRadius:10 }} />
-        <button type="submit" style={{ padding:'16px 24px', fontSize:16, border:0, borderRadius:10, cursor:'pointer' }}>Search</button>
-      </form>
 
       <section style={{ marginTop:48 }}><h2>Browse by Province or Territory</h2><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:16 }}>{provinces.map(province => <a key={province} href={`/search?province=${encodeURIComponent(province)}`} style={{ padding:'10px 14px', border:'1px solid #ddd', borderRadius:999, textDecoration:'none' }}>{province}</a>)}</div></section>
       <section style={{ marginTop:48, padding:24, border:'1px solid #eee', borderRadius:14 }}><h2>Help keep the directory accurate</h2><p>Place records will show verification and last-updated dates so visitors can see how current the information is.</p><a href="/submit">Submit a Buddhist Place</a></section>
